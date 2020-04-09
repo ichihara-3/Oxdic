@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -13,35 +11,29 @@ import (
 // required to translate language flags
 var (
 	// source language
-	source = flag.String("source", "en", "translate source")
+	term = flag.String("term", "", "a term to search")
 	// target language
-	target = flag.String("target", "ja", "translate traget")
+	lang = flag.String("lang", "en-us", "a used language to search")
 	// source language text
-	text = flag.String("text", "", "translate source text")
-	// Use the Google Apps Script to translate language
-	endpoint = flag.String("endpoint", "https://script.google.com/macros/s/AKfycbywwDmlmQrNPYoxL90NCZYjoEzuzRcnRuUmFCPzEqG7VdWBAhU/exec", "translate endpoint")
+	// Use the Oxford dictionary API
+	endpoint = flag.String("endpoint", "https://od-api.oxforddictionaries.com/api/v2/entries", "dictionary endpoint")
 )
 
-type post struct {
-	Text   string `json:"text"`
-	Source string `json:"source"`
-	Target string `json:"target"`
+func searchUrl(endpoint, lang, term string) string {
+	return endpoint + "/" + lang + "/" + term
 }
 
 // translate language
-func translate(text, source, target string) (string, error) {
-	postData, err := json.Marshal(post{text, source, target})
-	if err != nil {
-		return "", err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, *endpoint, bytes.NewBuffer([]byte(postData)))
+func search(term, lang, app_id, app_key string) (string, error) {
+	url := searchUrl(*endpoint, lang, term)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 
 	if err != nil {
 		return "", err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("app_id", app_id)
+	req.Header.Set("app_key", app_key)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -60,20 +52,28 @@ func translate(text, source, target string) (string, error) {
 
 func run(args []string) int {
 	envEndpoint := os.Getenv("GTRAN_ENDPOINT")
+	envAppId := os.Getenv("OXDIC_APP_ID")
+	envAppKey := os.Getenv("OXDIC_APP_KEY")
+
+	if envAppId == "" || envAppKey == "" {
+		fmt.Fprintf(os.Stderr, "OXDIC_APP_ID or OXDIC_APP_KEY not set\n")
+		return -1
+	}
+
 	if envEndpoint != "" {
 		*endpoint = envEndpoint
 	}
 
-	if len(args) == 0 && *text == "" {
+	if len(args) == 0 && *term == "" {
 		flag.Usage()
 		return -1
 	}
 
-	if *text == "" && args[0] != "" {
-		*text = args[0]
+	if *term == "" && args[0] != "" {
+		*term = args[0]
 	}
 
-	result, err := translate(*text, *source, *target)
+	result, err := search(*term, *lang, envAppId, envAppKey)
 	if err != nil {
 		return -1
 	}

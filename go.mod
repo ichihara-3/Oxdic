@@ -1,3 +1,3 @@
-module github.com/skanehira/gtran
+module github.com/ichihara-3/Oxdic
 
-go 1.12
+go 1.14
