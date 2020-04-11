@@ -8,14 +8,9 @@ import (
 	"os"
 )
 
-// required to translate language flags
 var (
-	// source language
-	term = flag.String("term", "", "a term to search")
-	// target language
-	lang = flag.String("lang", "en-us", "a used language to search")
-	// source language text
-	// Use the Oxford dictionary API
+	term     = flag.String("term", "", "a term to search")
+	lang     = flag.String("lang", "en-us", "a used language to search")
 	endpoint = flag.String("endpoint", "https://od-api.oxforddictionaries.com/api/v2/entries", "dictionary endpoint")
 )
 
@@ -51,7 +46,7 @@ func search(term, lang, app_id, app_key string) (string, error) {
 }
 
 func run(args []string) int {
-	envEndpoint := os.Getenv("GTRAN_ENDPOINT")
+	envEndpoint := os.Getenv("OXDIC_ENDPOINT")
 	envAppId := os.Getenv("OXDIC_APP_ID")
 	envAppKey := os.Getenv("OXDIC_APP_KEY")
 
