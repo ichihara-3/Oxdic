@@ -1,55 +1,47 @@
 package main
 
 import (
-	"flag"
 	"os"
 	"testing"
 )
 
 func TestTranslate(t *testing.T) {
 	t.Run("translate test", func(t *testing.T) {
+		app_id := os.Getenv("OXDIC_APP_ID")
+		app_key := os.Getenv("OXDIC_APP_KEY")
 		tests := []struct {
-			source string
-			target string
-			text   string
-			want   string
+			term string
+			lang string
 		}{
-			{"ja", "en", "お腹が空いた", "I am hungry"},
-			{"en", "ja", "I'm hungry", "お腹が空きました"},
+			{"test", "en-us"},
+			{"swimming", "en-us"},
 		}
 
 		for _, test := range tests {
-			result, err := translate(test.text, test.source, test.target)
+			_, err := search(test.term, test.lang, app_id, app_key)
 			if err != nil {
-				t.Errorf("cannnot translate %s", err)
+				t.Errorf("cannnot search %s", err)
 			}
 
-			if result != test.want {
-				t.Errorf("result is wrong. want=%s, actual=%s", test.want, result)
-			}
 		}
 
 	})
 
 	t.Run("run test", func(t *testing.T) {
 		tests := []struct {
-			text     string
 			args     []string
 			endpoint string
 			want     int
 		}{
-			{"", []string{}, "", -1},
-			{"", []string{"hello"}, "", 0},
-			{"hello", []string{}, "", 0},
-			{"hello", []string{}, "invalid_endpoint", -1},
+			{[]string{}, "", -1},
+			{[]string{"hello"}, "", 0},
+			{[]string{}, "", 0},
+			{[]string{}, "invalid_endpoint", -1},
 		}
 
 		for i, test := range tests {
 			if test.endpoint != "" {
-				os.Setenv("GTRAN_ENDPOINT", test.endpoint)
-			}
-			if test.text != "" {
-				flag.CommandLine.Set("text", test.text)
+				os.Setenv("OXDIC_ENDPOINT", test.endpoint)
 			}
 
 			result := run(test.args)
